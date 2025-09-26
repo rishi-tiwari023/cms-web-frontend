@@ -133,24 +133,34 @@ export default function StudentDashboard() {
       </div>
 
       {editingCaseId && (
-        <div style={styles.formCard}>
-          <h3 style={styles.formTitle}>🛠️ Update Progress / Upload Document</h3>
-          <div style={styles.formRow}>
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Progress (%)</label>
-              <input type="number" min={0} max={100} value={editPercent}
-                onChange={e => setEditPercent(Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
-                style={styles.input} />
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalCard}>
+            <div style={styles.modalHeader}>
+              <h3 style={styles.modalTitle}>🛠️ Update Progress / Upload</h3>
+              <button style={styles.closeBtn} aria-label="Close" onClick={() => { setEditingCaseId(null); setEditNotes(''); setEditPercent(0); }}>✕</button>
             </div>
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Notes</label>
-              <input value={editNotes} onChange={e => setEditNotes(e.target.value)} style={styles.input} placeholder="What changed?" />
+
+            <div style={styles.formRow}>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Progress</label>
+                <input type="range" min={0} max={100} value={editPercent}
+                  onChange={e => setEditPercent(Number(e.target.value) || 0)}
+                  style={{ width: 240 }} />
+                <div style={styles.rangeValue}>{editPercent}%</div>
+              </div>
             </div>
-          </div>
-          <div style={styles.formRow}>
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Attach Document (optional)</label>
-              <input type="file" accept="*/*" onChange={async (e) => {
+
+            <div style={styles.formRow}>
+              <div style={{ ...styles.formGroup, flex: 1 }}>
+                <label style={styles.label}>Notes</label>
+                <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} style={{ ...styles.input, minHeight: 80 }} placeholder="What changed?" />
+              </div>
+            </div>
+
+            <div style={styles.formRow}>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Attach Document (optional)</label>
+                <input type="file" accept="*/*" onChange={async (e) => {
                 const file = e.target.files?.[0]
                 if (!file || !currentUser || !editingCaseId) return
                 try {
@@ -168,10 +178,12 @@ export default function StudentDashboard() {
                   setUploading(false)
                 }
               }} />
+                {uploading && <div style={styles.hint}>Uploading...</div>}
+              </div>
             </div>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button style={styles.primaryBtn} disabled={uploading} onClick={async () => {
+
+            <div style={styles.modalActions}>
+              <button style={styles.primaryBtn} disabled={uploading} onClick={async () => {
               if (!currentUser || !editingCaseId) return
               // Add progress entry
               await addDoc(collection(db, 'progress'), {
@@ -189,12 +201,13 @@ export default function StudentDashboard() {
               setEditingCaseId(null)
               setEditNotes('')
               setEditPercent(0)
-            }}>Save</button>
-            <button style={styles.secondaryBtn} onClick={() => {
+              }}>Save</button>
+              <button style={styles.secondaryBtn} onClick={() => {
               setEditingCaseId(null)
               setEditNotes('')
               setEditPercent(0)
-            }}>Cancel</button>
+              }}>Cancel</button>
+            </div>
           </div>
         </div>
       )}
@@ -285,4 +298,51 @@ const styles: Record<string, React.CSSProperties> = {
   progressBar: { width: 120, height: 8, background: '#e5e7eb', borderRadius: 4, overflow: 'hidden', marginBottom: 4 },
   progressBarFill: { height: '100%', borderRadius: 4, transition: 'width 0.3s ease' },
   progressText: { fontSize: 12, fontWeight: 700, color: '#4b5563' },
+  // Modal styles
+  modalOverlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(0,0,0,0.35)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    zIndex: 50,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 560,
+    background: '#ffffff',
+    borderRadius: 12,
+    boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+    padding: 18,
+  },
+  modalHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  modalTitle: { margin: 0, fontSize: 18, fontWeight: 800, color: '#111827' },
+  closeBtn: {
+    border: 'none',
+    background: '#f3f4f6',
+    color: '#374151',
+    borderRadius: 8,
+    padding: '6px 10px',
+    cursor: 'pointer',
+    fontWeight: 700,
+  },
+  formCard: { background: '#ffffff', borderRadius: 12, padding: 16, boxShadow: '0 8px 28px rgba(0,0,0,0.10)' },
+  formTitle: { margin: '0 0 12px 0', fontSize: 16, fontWeight: 700, color: '#111827' },
+  formRow: { display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'wrap' },
+  formGroup: { display: 'flex', flexDirection: 'column', gap: 6 },
+  label: { fontSize: 12, fontWeight: 700, color: '#4b5563' },
+  input: { border: '2px solid #e5e7eb', borderRadius: 8, padding: '10px 12px', outline: 'none', fontSize: 13 },
+  rangeValue: { fontSize: 12, fontWeight: 700, color: '#374151', marginTop: 4 },
+  hint: { fontSize: 12, color: '#6b7280', marginTop: 6 },
+  modalActions: { display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 8 },
+  primaryBtn: { padding: '10px 14px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' },
+  secondaryBtn: { padding: '10px 14px', background: '#e5e7eb', color: '#111827', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' },
+  actionBtn: { padding: '8px 12px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' },
 }
