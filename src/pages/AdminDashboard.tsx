@@ -79,21 +79,17 @@ export default function AdminDashboard() {
   }
 
   const getProgressData = () => {
-    const progressRanges = [
-      { range: '0-25%', count: 0 },
-      { range: '26-50%', count: 0 },
-      { range: '51-75%', count: 0 },
-      { range: '76-100%', count: 0 }
-    ]
-    
-    cases.forEach(case_ => {
-      if (case_.progressPercentage <= 25) progressRanges[0].count++
-      else if (case_.progressPercentage <= 50) progressRanges[1].count++
-      else if (case_.progressPercentage <= 75) progressRanges[2].count++
-      else progressRanges[3].count++
-    })
-    
-    return progressRanges
+    // Compute slices for donut pie: each case contributes its progress toward total achievable
+    const totalAchievable = Math.max(cases.length * 100, 1)
+    const palette = ['#3b82f6', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#0ea5e9', '#22c55e', '#a855f7']
+    const slices = cases.map((c, idx) => ({
+      id: c.id,
+      label: c.title,
+      value: c.progressPercentage,
+      percent: (c.progressPercentage / totalAchievable) * 100,
+      color: palette[idx % palette.length],
+    }))
+    return slices
   }
 
   async function createCase(e: React.FormEvent) {
@@ -246,25 +242,46 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Progress Chart */}
+            {/* Cases Progress Donut */}
             <div style={styles.chartCard}>
-              <h3 style={styles.chartTitle}>📈 Progress Distribution</h3>
-              <div style={styles.chartContainer}>
-                {progressData.map((item, index) => (
-                  <div key={item.range} style={styles.chartBar}>
-                    <div style={styles.barLabel}>{item.range}</div>
-                    <div style={styles.barContainer}>
-                      <div 
-                        style={{
-                          ...styles.bar,
-                          width: `${(item.count / stats.totalCases) * 100}%`,
-                          background: ['#ef4444', '#f59e0b', '#10b981', '#3b82f6'][index]
-                        }}
-                      ></div>
-                    </div>
-                    <div style={styles.barValue}>{item.count}</div>
+              <h3 style={styles.chartTitle}>🎯 Progress by Case (Donut)</h3>
+              <div style={{ display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={styles.donutWrapper}>
+                  <div
+                    style={{
+                      ...styles.donut,
+                      background: (() => {
+                        if (progressData.length === 0) return '#f1f5f9'
+                        let acc = 0
+                        const stops = progressData.map((s) => {
+                          const start = acc
+                          const end = acc + s.percent
+                          acc = end
+                          return `${s.color} ${start}% ${end}%`
+                        })
+                        return `conic-gradient(${stops.join(',')})`
+                      })(),
+                    }}
+                  />
+                  <div style={styles.donutHole}>
+                    <div style={{ fontWeight: 800, fontSize: 18, color: '#1f2937' }}>{Math.round(
+                      (cases.reduce((sum, c) => sum + c.progressPercentage, 0) / Math.max(cases.length * 100, 1)) * 100
+                    )}%</div>
+                    <div style={{ fontSize: 12, color: '#6b7280' }}>Overall</div>
                   </div>
-                ))}
+                </div>
+                <div style={{ display: 'grid', gap: 8, minWidth: 220, flex: 1 }}>
+                  {progressData.slice(0, 8).map((s) => (
+                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ width: 12, height: 12, borderRadius: 3, background: s.color, display: 'inline-block' }}></span>
+                      <span style={{ fontSize: 12, color: '#374151', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</span>
+                      <span style={{ fontSize: 12, color: '#111827', fontWeight: 700 }}>{Math.round(s.percent)}%</span>
+                    </div>
+                  ))}
+                  {progressData.length > 8 && (
+                    <div style={{ fontSize: 12, color: '#6b7280' }}>+{progressData.length - 8} more…</div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -636,6 +653,33 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
     gap: '20px',
+  },
+  donutWrapper: {
+    position: 'relative',
+    width: 200,
+    height: 200,
+    minWidth: 200,
+  },
+  donut: {
+    width: '100%',
+    height: '100%',
+    borderRadius: '50%',
+    background: '#f1f5f9',
+  },
+  donutHole: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 120,
+    height: 120,
+    borderRadius: '50%',
+    background: '#ffffff',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: 'inset 0 0 0 1px #e5e7eb',
   },
   chartCard: {
     background: 'rgba(255, 255, 255, 0.9)',
