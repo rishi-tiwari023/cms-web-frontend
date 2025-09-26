@@ -15,7 +15,9 @@ export const apiConfig = {
 
 // Helper function to make API calls
 export async function apiCall(endpoint: string, options: RequestInit = {}) {
-  const url = `${API_BASE_URL}${endpoint}`
+  // Remove leading slash from endpoint to avoid double slashes
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint
+  const url = `${API_BASE_URL}/${cleanEndpoint}`
   
   const defaultOptions: RequestInit = {
     headers: {
