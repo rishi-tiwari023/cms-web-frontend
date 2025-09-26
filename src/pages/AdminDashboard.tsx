@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { db } from '../firebase'
 import { addDoc, collection, serverTimestamp, onSnapshot, query, orderBy } from 'firebase/firestore'
-import { apiCall } from '../api/config'
 
 type User = { id: string; username: string; role: string; name: string; email: string; createdAt: string }
 
@@ -30,10 +29,12 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'overview' | 'cases' | 'users' | 'assign'>('overview')
 
   useEffect(() => {
-    // Fetch users from backend API
-    apiCall('/api/users')
-      .then(setUsers)
-      .catch(err => console.error('Failed to fetch users:', err))
+    // Fetch users from Firestore
+    const usersQuery = query(collection(db, 'users'), orderBy('createdAt', 'desc'))
+    const unsubscribeUsers = onSnapshot(usersQuery, (snapshot) => {
+      const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as User[]
+      setUsers(usersData)
+    })
 
     // Fetch cases from Firestore
     const casesQuery = query(collection(db, 'cases'), orderBy('createdAt', 'desc'))
@@ -43,6 +44,7 @@ export default function AdminDashboard() {
     })
 
     return () => {
+      unsubscribeUsers()
       unsubscribeCases()
     }
   }, [])
