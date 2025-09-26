@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { db } from '../firebase'
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore'
+import { apiCall } from '../api/config'
 
 type User = { id: string; username: string; role: string; name: string }
 
@@ -13,8 +14,10 @@ export default function AdminDashboard() {
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
-    // Fetch users (could also be Firestore if you seed users there)
-    fetch('http://localhost:4000/api/users').then(r => r.json()).then(setUsers)
+    // Fetch users from backend API
+    apiCall('/api/users')
+      .then(setUsers)
+      .catch(err => console.error('Failed to fetch users:', err))
   }, [])
 
   const isValid = form.assignedTo && form.title.trim().length > 0
