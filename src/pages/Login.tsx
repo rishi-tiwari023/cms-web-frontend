@@ -42,48 +42,154 @@ export default function Login() {
   }
 
   return (
-    <div style={styles.page}>
+    <>
+      <style>{`
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+        
+        html, body {
+          width: 100%;
+          height: 100%;
+          margin: 0;
+          padding: 0;
+          overflow-x: hidden;
+        }
+        
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(180deg); }
+        }
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 768px) {
+          .login-card {
+            max-width: 90% !important;
+            width: 90% !important;
+            padding: 24px !important;
+            margin: 10px auto !important;
+            border-radius: 16px !important;
+          }
+          .login-title {
+            font-size: 28px !important;
+          }
+          .login-input {
+            height: 48px !important;
+            font-size: 16px !important;
+            padding: 0 16px !important;
+          }
+          .login-button {
+            height: 52px !important;
+            font-size: 15px !important;
+          }
+        }
+        
+        @media (max-width: 480px) {
+          .login-card {
+            max-width: 95% !important;
+            width: 95% !important;
+            padding: 20px !important;
+            margin: 5px auto !important;
+          }
+          .login-title {
+            font-size: 24px !important;
+          }
+          .login-subtitle {
+            font-size: 14px !important;
+          }
+          .login-input {
+            height: 44px !important;
+            font-size: 15px !important;
+          }
+          .login-button {
+            height: 48px !important;
+            font-size: 14px !important;
+          }
+        }
+        
+        @media (min-width: 1200px) {
+          .login-card {
+            max-width: 480px !important;
+            padding: 48px !important;
+          }
+          .login-title {
+            font-size: 36px !important;
+          }
+          .login-input {
+            height: 56px !important;
+            font-size: 17px !important;
+          }
+          .login-button {
+            height: 60px !important;
+            font-size: 17px !important;
+          }
+        }
+      `}</style>
+      <div style={styles.page}>
+        {/* Decorative background elements */}
+        <div style={{
+          position: 'absolute',
+          top: '-50%',
+          left: '-50%',
+          width: '200%',
+          height: '200%',
+          background: 'radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%)',
+          animation: 'float 20s ease-in-out infinite',
+        }} />
+      
       <div
+        className="login-card"
         style={{
           ...styles.card,
-          boxShadow: isCardHover ? '0 16px 40px rgba(37,99,235,0.18)' : styles.card.boxShadow,
-          borderColor: isCardHover ? '#93c5fd' : '#e5e7eb',
+          boxShadow: isCardHover ? '0 35px 70px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.15)' : styles.card.boxShadow,
+          transform: isCardHover ? 'translateY(-5px) scale(1.02)' : 'translateY(0) scale(1)',
         }}
         onMouseEnter={() => setIsCardHover(true)}
         onMouseLeave={() => setIsCardHover(false)}
       >
-        <h1 style={styles.title}>Sign in</h1>
-        <p style={styles.subtitle}>Use your CMS account to continue</p>
+        <h1 className="login-title" style={styles.title}>Sign in</h1>
+        <p className="login-subtitle" style={styles.subtitle}>Use your CMS account to continue</p>
         <form onSubmit={handleSubmit} style={styles.form}>
           <label style={styles.label}>Username</label>
           <input
+            className="login-input"
             style={{
               ...styles.input,
-              marginBottom: 10,
-              borderColor: focusedField === 'username' ? '#2563eb' : '#d1d5db',
-              boxShadow: focusedField === 'username' ? '0 0 0 4px rgba(37,99,235,0.15)' : 'none',
+              borderColor: focusedField === 'username' ? '#667eea' : '#e2e8f0',
+              boxShadow: focusedField === 'username' ? '0 0 0 4px rgba(102, 126, 234, 0.1), 0 4px 12px rgba(102, 126, 234, 0.15)' : '0 2px 4px rgba(0,0,0,0.05)',
+              transform: focusedField === 'username' ? 'translateY(-1px)' : 'translateY(0)',
             }}
             value={username}
             onChange={e => setUsername(e.target.value)}
             onFocus={() => setFocusedField('username')}
             onBlur={() => setFocusedField(null)}
             autoFocus
+            placeholder="Enter your username"
           />
 
           <label style={styles.label}>Password</label>
-          <div style={{ position: 'relative', marginBottom: 12 }}>
+          <div style={{ position: 'relative' }}>
             <input
+              className="login-input"
               style={{
                 ...styles.input,
-                paddingRight: 90,
-                borderColor: focusedField === 'password' ? '#2563eb' : '#d1d5db',
-                boxShadow: focusedField === 'password' ? '0 0 0 4px rgba(37,99,235,0.15)' : 'none',
+                paddingRight: 80,
+                borderColor: focusedField === 'password' ? '#667eea' : '#e2e8f0',
+                boxShadow: focusedField === 'password' ? '0 0 0 4px rgba(102, 126, 234, 0.1), 0 4px 12px rgba(102, 126, 234, 0.15)' : '0 2px 4px rgba(0,0,0,0.05)',
+                transform: focusedField === 'password' ? 'translateY(-1px)' : 'translateY(0)',
               }}
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={e => setPassword(e.target.value)}
               onFocus={() => setFocusedField('password')}
               onBlur={() => setFocusedField(null)}
+              placeholder="Enter your password"
             />
             <button
               type="button"
@@ -107,109 +213,144 @@ export default function Login() {
             </div>
           )}
 
-          <button type="submit" disabled={submitting || !username || !password} style={{
+          <button type="submit" className="login-button" disabled={submitting || !username || !password} style={{
             ...styles.button,
-            opacity: submitting || !username || !password ? 0.7 : 1,
+            opacity: submitting || !username || !password ? 0.6 : 1,
             cursor: submitting || !username || !password ? 'not-allowed' : 'pointer',
+            transform: submitting || !username || !password ? 'none' : 'translateY(0)',
           }}
-            onMouseEnter={(e) => ((e.currentTarget.style.boxShadow = '0 8px 22px rgba(37,99,235,0.25)'))}
-            onMouseLeave={(e) => ((e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.06)'))}
+            onMouseEnter={(e) => {
+              if (!submitting && username && password) {
+                e.currentTarget.style.boxShadow = '0 12px 35px rgba(102, 126, 234, 0.4)'
+                e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)'
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.3)'
+              e.currentTarget.style.transform = 'translateY(0) scale(1)'
+            }}
           >
             {submitting ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
       </div>
-    </div>
+      </div>
+    </>
   )
 }
 
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: '100vh',
+    width: '100vw',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'linear-gradient(180deg, #f9fafb 0%, #eef2f7 100%)',
-    padding: 16,
-    width: '28vw',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    padding: '20px',
+    position: 'relative',
+    overflow: 'hidden',
+    margin: 0,
+    boxSizing: 'border-box',
   },
   card: {
-    width: '100%',
-    maxWidth: 720,
-    background: '#ffffff',
-    borderRadius: 12,
-    boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
-    padding: 28,
-    border: '1px solid #e5e7eb',
-    transition: 'box-shadow 180ms ease, border-color 180ms ease',
+    width: '75%',
+    maxWidth: '315px',
+    background: 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(20px)',
+    borderRadius: '18px',
+    boxShadow: '0 19px 38px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.1)',
+    padding: '30px',
+    border: '1px solid rgba(255,255,255,0.2)',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    position: 'relative',
+    margin: '0 auto',
   },
   title: {
     margin: 0,
-    fontSize: 26,
-    fontWeight: 700,
-    color: '#111827',
+    fontSize: 24,
+    fontWeight: 800,
+    color: '#1a202c',
+    textAlign: 'center',
+    marginBottom: 6,
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
   },
   subtitle: {
-    marginTop: 6,
-    marginBottom: 16,
-    color: '#6b7280',
-    fontSize: 14,
+    marginTop: 0,
+    marginBottom: 24,
+    color: '#718096',
+    fontSize: 12,
+    textAlign: 'center',
+    fontWeight: 500,
   },
   form: {
-    display: 'grid',
-    gap: 12,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 18,
   },
   label: {
-    fontSize: 12,
-    color: '#6b7280',
+    fontSize: 11,
+    color: '#4a5568',
+    fontWeight: 600,
+    marginBottom: 6,
+    display: 'block',
   },
   input: {
     width: '100%',
-    height: 44,
-    borderRadius: 8,
-    border: '1px solid #d1d5db',
-    padding: '0 14px',
+    height: 39,
+    borderRadius: 12,
+    border: '2px solid #e2e8f0',
+    padding: '0 15px',
     outline: 'none',
-    fontSize: 15,
-    color: '#111827',
+    fontSize: 12,
+    color: '#2d3748',
     background: '#ffffff',
-    transition: 'box-shadow 160ms ease, border-color 160ms ease',
+    transition: 'all 0.2s ease',
+    boxSizing: 'border-box',
   },
   toggle: {
     position: 'absolute',
-    right: 10,
-    top: 6,
+    right: 16,
+    top: 12,
     height: 28,
-    minWidth: 44,
-    border: '1px solid #e5e7eb',
-    borderRadius: 6,
-    background: '#f9fafb',
-    padding: '0 8px',
+    minWidth: 50,
+    border: '2px solid #e2e8f0',
+    borderRadius: 12,
+    background: '#f7fafc',
+    padding: '0 12px',
     fontSize: 12,
-    color: '#374151',
+    color: '#4a5568',
     cursor: 'pointer',
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    transition: 'border-color 160ms ease, box-shadow 160ms ease',
-    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+    transition: 'all 0.2s ease',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
     outline: 'none',
-    marginLeft: 6,
+    fontWeight: 600,
   },
   message: {
-    fontSize: 13,
-    borderRadius: 8,
-    padding: '10px 12px',
+    fontSize: 14,
+    borderRadius: 12,
+    padding: '16px 20px',
+    fontWeight: 500,
+    textAlign: 'center',
   },
   button: {
-    height: 46,
-    borderRadius: 10,
-    border: '1px solid #2563eb',
-    background: 'linear-gradient(180deg,#3b82f6 0%,#2563eb 100%)',
+    height: 42,
+    borderRadius: 12,
+    border: 'none',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     color: '#ffffff',
-    fontWeight: 600,
-    fontSize: 15,
-    boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
-    transition: 'box-shadow 180ms ease',
+    fontWeight: 700,
+    fontSize: 12,
+    boxShadow: '0 6px 19px rgba(102, 126, 234, 0.3)',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    cursor: 'pointer',
+    position: 'relative',
+    overflow: 'hidden',
   },
 }
