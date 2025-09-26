@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { db } from '../firebase'
 import { addDoc, collection, serverTimestamp, onSnapshot, query, orderBy } from 'firebase/firestore'
 
-type User = { id: string; username: string; role: string; name: string; email: string; createdAt: string }
+type User = { id: string; username: string; role: string; name: string; email: string; createdAt?: any }
 
 type Case = { 
   id: string; 
@@ -30,18 +30,33 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     // Fetch users from Firestore
-    const usersQuery = query(collection(db, 'users'), orderBy('createdAt', 'desc'))
-    const unsubscribeUsers = onSnapshot(usersQuery, (snapshot) => {
-      const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as User[]
-      setUsers(usersData)
-    })
+    // Avoid ordering by a field that may be missing on legacy docs
+    const usersQuery = collection(db, 'users')
+    const unsubscribeUsers = onSnapshot(
+      usersQuery,
+      (snapshot) => {
+        const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as User[]
+        setUsers(usersData)
+      },
+      (error) => {
+        console.error('Users listener error:', error)
+        setMessage(`❌ Users load error: ${error.message || 'Unknown error'}`)
+      }
+    )
 
     // Fetch cases from Firestore
     const casesQuery = query(collection(db, 'cases'), orderBy('createdAt', 'desc'))
-    const unsubscribeCases = onSnapshot(casesQuery, (snapshot) => {
-      const casesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Case[]
-      setCases(casesData)
-    })
+    const unsubscribeCases = onSnapshot(
+      casesQuery,
+      (snapshot) => {
+        const casesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Case[]
+        setCases(casesData)
+      },
+      (error) => {
+        console.error('Cases listener error:', error)
+        setMessage(`❌ Cases load error: ${error.message || 'Unknown error'}`)
+      }
+    )
 
     return () => {
       unsubscribeUsers()
@@ -469,7 +484,10 @@ export default function AdminDashboard() {
                           <span style={styles.caseCount}>{userCases.length}</span>
                         </td>
                         <td style={styles.tableCell}>
-                          {new Date(user.createdAt).toLocaleDateString()}
+                          {user.createdAt?.toDate ?
+                            user.createdAt.toDate().toLocaleDateString() :
+                            (user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A')
+                          }
                         </td>
                       </tr>
                     )
