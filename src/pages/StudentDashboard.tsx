@@ -25,7 +25,11 @@ export default function StudentDashboard() {
     const user = JSON.parse(localStorage.getItem('user') || 'null')
     if (!user) return
 
-    const casesQ = query(collection(db, 'cases'), where('assignedTo', '==', user.id))
+    const casesQ = query(
+      collection(db, 'cases'),
+      where('assignedTo', '==', user.id),
+      orderBy('createdAt', 'desc')
+    )
     const unsubCases = onSnapshot(casesQ, (snap) => {
       const list = snap.docs.map(d => ({ id: d.id, ...(d.data() as any) })) as CaseItem[]
       setCases(list)
