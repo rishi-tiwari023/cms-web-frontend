@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { db } from '../firebase'
-import { collection, onSnapshot, orderBy, query, where } from 'firebase/firestore'
+import { db, storage } from '../firebase'
+import { collection, doc, onSnapshot, orderBy, query, where, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 
 type CaseItem = {
   id: string
@@ -21,6 +22,10 @@ export default function StudentDashboard() {
   const [cases, setCases] = useState<CaseItem[]>([])
   const [progress, setProgress] = useState<ProgressItem[]>([])
   const currentUser = JSON.parse(localStorage.getItem('user') || 'null') as { id: string; name?: string } | null
+  const [editingCaseId, setEditingCaseId] = useState<string | null>(null)
+  const [editPercent, setEditPercent] = useState<number>(0)
+  const [editNotes, setEditNotes] = useState<string>('')
+  const [uploading, setUploading] = useState<boolean>(false)
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || 'null')
@@ -84,6 +89,7 @@ export default function StudentDashboard() {
                 <th>Title</th>
                 <th>Status</th>
                 <th>Progress</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -112,12 +118,86 @@ export default function StudentDashboard() {
                     </div>
                     <span style={styles.progressText}>{c.progressPercentage ?? 0}%</span>
                   </td>
+                  <td style={styles.tableCell}>
+                    <button style={styles.actionBtn} onClick={() => {
+                      setEditingCaseId(c.id)
+                      setEditPercent(c.progressPercentage ?? 0)
+                      setEditNotes('')
+                    }}>Edit</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+
+      {editingCaseId && (
+        <div style={styles.formCard}>
+          <h3 style={styles.formTitle}>🛠️ Update Progress / Upload Document</h3>
+          <div style={styles.formRow}>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Progress (%)</label>
+              <input type="number" min={0} max={100} value={editPercent}
+                onChange={e => setEditPercent(Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
+                style={styles.input} />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Notes</label>
+              <input value={editNotes} onChange={e => setEditNotes(e.target.value)} style={styles.input} placeholder="What changed?" />
+            </div>
+          </div>
+          <div style={styles.formRow}>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Attach Document (optional)</label>
+              <input type="file" accept="*/*" onChange={async (e) => {
+                const file = e.target.files?.[0]
+                if (!file || !currentUser || !editingCaseId) return
+                try {
+                  setUploading(true)
+                  const fileRef = ref(storage, `case-documents/${editingCaseId}/${Date.now()}-${file.name}`)
+                  await uploadBytes(fileRef, file)
+                  const url = await getDownloadURL(fileRef)
+                  // Update case with document URL and status
+                  await updateDoc(doc(db, 'cases', editingCaseId), {
+                    documentStatus: 'UPLOADED',
+                    documentUrl: url,
+                    updatedAt: serverTimestamp(),
+                  })
+                } finally {
+                  setUploading(false)
+                }
+              }} />
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button style={styles.primaryBtn} disabled={uploading} onClick={async () => {
+              if (!currentUser || !editingCaseId) return
+              // Add progress entry
+              await addDoc(collection(db, 'progress'), {
+                caseId: editingCaseId,
+                userId: currentUser.id,
+                progressPercentage: editPercent,
+                notes: editNotes || null,
+                createdAt: serverTimestamp(),
+              })
+              // Update case percentage
+              await updateDoc(doc(db, 'cases', editingCaseId), {
+                progressPercentage: editPercent,
+                updatedAt: serverTimestamp(),
+              })
+              setEditingCaseId(null)
+              setEditNotes('')
+              setEditPercent(0)
+            }}>Save</button>
+            <button style={styles.secondaryBtn} onClick={() => {
+              setEditingCaseId(null)
+              setEditNotes('')
+              setEditPercent(0)
+            }}>Cancel</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
