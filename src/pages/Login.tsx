@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { apiCall } from '../api/config'
+import { db } from '../firebase'
+import { collection, getDocs, query, where, limit } from 'firebase/firestore'
 
 export default function Login() {
   const [username, setUsername] = useState('')
@@ -19,15 +20,21 @@ export default function Login() {
     setIsError(false)
     setSubmitting(true)
     try {
-      const data = await apiCall('/api/users/login', {
-        method: 'POST',
-        body: JSON.stringify({ username, password }),
-      })
-      setMessage(`Welcome ${data.user?.name || username}`)
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('user', JSON.stringify(data.user))
+      // Authenticate against Firestore users collection
+      const usersRef = collection(db, 'users')
+      const q = query(usersRef, where('username', '==', username), where('password', '==', password), limit(1))
+      const snap = await getDocs(q)
+      if (snap.empty) {
+        throw new Error('Invalid credentials')
+      }
+      const doc = snap.docs[0]
+      const user = { id: doc.id, ...(doc.data() as any) }
 
-      const role = data.user?.role
+      setMessage(`Welcome ${user.name || username}`)
+      localStorage.setItem('token', 'firestore-local')
+      localStorage.setItem('user', JSON.stringify(user))
+
+      const role = user?.role
       if (role === 'ADMIN') {
         navigate('/admin')
       } else {
