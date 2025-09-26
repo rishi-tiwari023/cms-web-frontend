@@ -20,6 +20,7 @@ type ProgressItem = {
 export default function StudentDashboard() {
   const [cases, setCases] = useState<CaseItem[]>([])
   const [progress, setProgress] = useState<ProgressItem[]>([])
+  const currentUser = JSON.parse(localStorage.getItem('user') || 'null') as { id: string; name?: string } | null
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || 'null')
@@ -45,30 +46,163 @@ export default function StudentDashboard() {
   }, [])
 
   return (
-    <div style={{ padding: 16, maxWidth: 960, margin: '0 auto' }}>
-      <h2 style={{ marginTop: 0, color: '#0f172a' }}>Student Dashboard (Firestore)</h2>
-      <section style={{
-        background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, marginBottom: 16,
-        boxShadow: '0 4px 14px rgba(0,0,0,0.06)'
-      }}>
-        <div style={{ display: 'flex', gap: 16 }}>
-          <div>Cases: {cases.length}</div>
-          <div>Progress Updates: {progress.length}</div>
+    <div style={styles.container}>
+      {/* Header */}
+      <div style={styles.header}>
+        <h1 style={styles.title}>🎓 Student Dashboard</h1>
+        <div style={styles.userInfo}>
+          <span style={styles.userName}>Welcome{currentUser?.name ? `, ${currentUser.name}` : ''}</span>
+          <div style={styles.statusDot}></div>
         </div>
-      </section>
-      <section style={{
-        background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16,
-        boxShadow: '0 4px 14px rgba(0,0,0,0.06)'
-      }}>
-        <ul>
-          {cases.map(c => (
-            <li key={c.id}>
-              <strong>{c.title}</strong> - {c.status}
-              {typeof c.progressPercentage === 'number' ? ` (${c.progressPercentage}%)` : null}
-            </li>
-          ))}
-        </ul>
-      </section>
+      </div>
+
+      {/* Stats */}
+      <div style={styles.statsGrid}>
+        <div style={{...styles.statCard, background: '#3b82f6'}}>
+          <div style={styles.statIcon}>📁</div>
+          <div style={styles.statContent}>
+            <div style={styles.statNumber}>{cases.length}</div>
+            <div style={styles.statLabel}>My Cases</div>
+          </div>
+        </div>
+        <div style={{...styles.statCard, background: '#10b981'}}>
+          <div style={styles.statIcon}>📝</div>
+          <div style={styles.statContent}>
+            <div style={styles.statNumber}>{progress.length}</div>
+            <div style={styles.statLabel}>Progress Updates</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Cases Table */}
+      <div style={styles.tableCard}>
+        <h3 style={styles.tableTitle}>📋 My Cases</h3>
+        <div style={styles.tableContainer}>
+          <table style={styles.table}>
+            <thead>
+              <tr style={styles.tableHeader}>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Progress</th>
+              </tr>
+            </thead>
+            <tbody>
+              {cases.map(c => (
+                <tr key={c.id} style={styles.tableRow}>
+                  <td style={styles.tableCell}>
+                    <div style={styles.caseTitle}>{c.title}</div>
+                    <div style={styles.caseDescription}>{c.description}</div>
+                  </td>
+                  <td style={styles.tableCell}>
+                    <span style={{
+                      ...styles.statusBadge,
+                      background: c.status === 'OPEN' ? '#e3f2fd' : c.status === 'ASSIGNED' ? '#fce4ec' : '#e8f5e9',
+                      color: c.status === 'OPEN' ? '#1976d2' : c.status === 'ASSIGNED' ? '#c2185b' : '#388e3c'
+                    }}>
+                      {c.status}
+                    </span>
+                  </td>
+                  <td style={styles.tableCell}>
+                    <div style={styles.progressBar}>
+                      <div style={{
+                        ...styles.progressBarFill,
+                        width: `${c.progressPercentage ?? 0}%`,
+                        background: (c.progressPercentage ?? 0) < 30 ? '#ff6b6b' : (c.progressPercentage ?? 0) < 70 ? '#ffa726' : '#66bb6a'
+                      }}></div>
+                    </div>
+                    <span style={styles.progressText}>{c.progressPercentage ?? 0}%</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   )
+}
+
+const styles: Record<string, React.CSSProperties> = {
+  container: {
+    minHeight: '100vh',
+    width: '100vw',
+    background: '#f8fafc',
+    padding: 20,
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    margin: 0,
+    boxSizing: 'border-box',
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    background: '#ffffff',
+    padding: '16px 24px',
+    borderRadius: 12,
+    boxShadow: '0 6px 20px rgba(0,0,0,0.08)',
+  },
+  title: {
+    margin: 0,
+    fontSize: 26,
+    fontWeight: 800,
+    color: '#1e293b',
+  },
+  userInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+  },
+  userName: {
+    fontSize: 14,
+    fontWeight: 600,
+    color: '#475569',
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: '50%',
+    background: '#10b981',
+    boxShadow: '0 0 0 3px rgba(16, 185, 129, 0.18)'
+  },
+  statsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: 16,
+    marginBottom: 20,
+  },
+  statCard: {
+    padding: 18,
+    borderRadius: 12,
+    color: 'white',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    boxShadow: '0 8px 28px rgba(0,0,0,0.12)'
+  },
+  statIcon: {
+    fontSize: 26,
+    opacity: 0.95,
+  },
+  statContent: { flex: 1 },
+  statNumber: { fontSize: 24, fontWeight: 800, marginBottom: 2 },
+  statLabel: { fontSize: 12, opacity: 0.95, fontWeight: 600 },
+  tableCard: {
+    background: '#ffffff',
+    padding: 18,
+    borderRadius: 12,
+    boxShadow: '0 8px 28px rgba(0,0,0,0.10)'
+  },
+  tableTitle: { margin: '0 0 14px 0', fontSize: 18, fontWeight: 700, color: '#1f2937' },
+  tableContainer: { overflowX: 'auto' },
+  table: { width: '100%', borderCollapse: 'collapse' },
+  tableHeader: { background: '#f8fafc' },
+  tableRow: { borderBottom: '1px solid #e2e8f0' },
+  tableCell: { padding: '12px 10px', fontSize: 14, color: '#374151' },
+  caseTitle: { fontWeight: 600, color: '#111827', marginBottom: 4 },
+  caseDescription: { fontSize: 12, color: '#6b7280', maxWidth: 420, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+  statusBadge: { padding: '4px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700, textTransform: 'uppercase' },
+  progressBar: { width: 120, height: 8, background: '#e5e7eb', borderRadius: 4, overflow: 'hidden', marginBottom: 4 },
+  progressBarFill: { height: '100%', borderRadius: 4, transition: 'width 0.3s ease' },
+  progressText: { fontSize: 12, fontWeight: 700, color: '#4b5563' },
 }
