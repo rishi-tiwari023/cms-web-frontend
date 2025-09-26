@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { apiCall } from '../api/config'
 
 export default function Login() {
   const [username, setUsername] = useState('')
@@ -18,13 +19,10 @@ export default function Login() {
     setIsError(false)
     setSubmitting(true)
     try {
-      const res = await fetch('http://localhost:4000/api/users/login', {
+      const data = await apiCall('/api/users/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Login failed')
       setMessage(`Welcome ${data.user?.name || username}`)
       localStorage.setItem('token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
