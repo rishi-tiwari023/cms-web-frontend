@@ -1,9 +1,7 @@
 services:
-  - type: web
+  - type: static
     name: cms-frontend
-    env: node
     buildCommand: npm install && npm run build
-    startCommand: npm start
     staticPublishPath: ./dist
     routes:
       - type: rewrite
