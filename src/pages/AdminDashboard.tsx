@@ -140,7 +140,7 @@ export default function AdminDashboard() {
   const progressData = getProgressData()
 
   return (
-    <div style={styles.container}>
+    <div style={styles.container} className="admin-container">
       <style>{`
         * {
           margin: 0;
@@ -154,6 +154,16 @@ export default function AdminDashboard() {
           margin: 0;
           padding: 0;
           overflow-x: hidden;
+          display: block !important;
+          place-items: unset !important;
+          min-width: 100% !important;
+        }
+        
+        #root {
+          width: 100% !important;
+          max-width: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
         }
         
         @keyframes fadeIn {
@@ -166,11 +176,82 @@ export default function AdminDashboard() {
         }
         .fade-in { animation: fadeIn 0.6s ease-out; }
         .slide-in { animation: slideIn 0.4s ease-out; }
+        
+        .admin-container {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 100% !important;
+        }
+        
+        .admin-stats-grid {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+        
+        .admin-charts-grid {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+        
+        @media (max-width: 768px) {
+          .admin-container {
+            padding: 10px !important;
+          }
+          .admin-header {
+            flex-direction: column !important;
+            gap: 15px !important;
+            text-align: center !important;
+          }
+          .admin-title {
+            font-size: 24px !important;
+          }
+          .admin-tabs {
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 100 !important;
+          }
+          .admin-tab {
+            min-width: auto !important;
+            flex: 1 1 auto !important;
+            font-size: 12px !important;
+            padding: 8px 12px !important;
+          }
+          .admin-stats-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .admin-charts-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .admin-table-container {
+            overflow-x: auto !important;
+          }
+          .admin-table {
+            min-width: 600px !important;
+          }
+        }
+        
+        @media (max-width: 480px) {
+          .admin-container {
+            padding: 5px !important;
+          }
+          .admin-title {
+            font-size: 20px !important;
+          }
+          .admin-header {
+            padding: 15px !important;
+          }
+          .admin-tab {
+            padding: 10px 15px !important;
+            font-size: 12px !important;
+          }
+        }
       `}</style>
       
       {/* Header */}
-      <div style={styles.header}>
-        <h1 style={styles.title}>📊 Admin Dashboard</h1>
+      <div style={styles.header} className="admin-header">
+        <h1 style={styles.title} className="admin-title">📊 Admin Dashboard</h1>
         <div style={styles.headerUserInfo}>
           <span style={styles.headerUserName}>Welcome, Admin</span>
           <div style={styles.statusDot}></div>
@@ -178,7 +259,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Navigation Tabs */}
-      <div style={styles.tabContainer}>
+      <div style={styles.tabContainer} className="admin-tabs">
         {[
           { id: 'overview', label: '📈 Overview', icon: '📊' },
           { id: 'cases', label: '📋 Cases', icon: '📁' },
@@ -191,6 +272,7 @@ export default function AdminDashboard() {
               ...styles.tab,
               ...(activeTab === tab.id ? styles.activeTab : {})
             }}
+            className="admin-tab"
             onClick={() => setActiveTab(tab.id as any)}
           >
             {tab.icon} {tab.label}
@@ -198,11 +280,13 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* Overview Tab */}
-      {activeTab === 'overview' && (
-        <div className="fade-in">
+      {/* Content Wrapper */}
+      <div style={styles.contentWrapper}>
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <div className="fade-in">
           {/* Stats Cards */}
-          <div style={styles.statsGrid}>
+          <div style={styles.statsGrid} className="admin-stats-grid">
             <div style={{...styles.statCard, background: '#3b82f6'}}>
               <div style={styles.statIcon}>👥</div>
               <div style={styles.statContent}>
@@ -234,7 +318,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Charts Grid */}
-          <div style={styles.chartsGrid}>
+          <div style={styles.chartsGrid} className="admin-charts-grid">
             {/* Case Status Chart */}
             <div style={styles.chartCard}>
               <h3 style={styles.chartTitle}>📊 Case Status Distribution</h3>
@@ -369,8 +453,8 @@ export default function AdminDashboard() {
         <div className="fade-in">
           <div style={styles.tableCard}>
             <h3 style={styles.tableTitle}>📋 All Cases</h3>
-            <div style={styles.tableContainer}>
-              <table style={styles.table}>
+            <div style={styles.tableContainer} className="admin-table-container">
+              <table style={styles.table} className="admin-table">
                 <thead>
                   <tr style={styles.tableHeader}>
                     <th>Title</th>
@@ -444,8 +528,8 @@ export default function AdminDashboard() {
         <div className="fade-in">
           <div style={styles.tableCard}>
             <h3 style={styles.tableTitle}>👥 All Users</h3>
-            <div style={styles.tableContainer}>
-              <table style={styles.table}>
+            <div style={styles.tableContainer} className="admin-table-container">
+              <table style={styles.table} className="admin-table">
                 <thead>
                   <tr style={styles.tableHeader}>
                     <th>Name</th>
@@ -561,6 +645,7 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }
@@ -568,12 +653,22 @@ export default function AdminDashboard() {
 const styles: Record<string, React.CSSProperties> = {
   container: {
     minHeight: '100vh',
-    width: '100vw',
+    width: '100%',
+    maxWidth: '100%',
     background: '#f8fafc',
     padding: '20px',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     margin: 0,
     boxSizing: 'border-box',
+    overflowX: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  contentWrapper: {
+    width: '100%',
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
   },
   header: {
     display: 'flex',
@@ -585,6 +680,8 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '16px',
     boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
     backdropFilter: 'blur(10px)',
+    width: '100%',
+    boxSizing: 'border-box',
   },
   title: {
     margin: 0,
@@ -617,6 +714,12 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '8px',
     borderRadius: '12px',
     boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+    width: '100%',
+    boxSizing: 'border-box',
+    flexWrap: 'wrap',
+    position: 'sticky',
+    top: '0',
+    zIndex: 100,
   },
   tab: {
     padding: '12px 20px',
@@ -628,6 +731,9 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     cursor: 'pointer',
     transition: 'all 0.2s ease',
+    whiteSpace: 'nowrap',
+    flex: '1 1 auto',
+    minWidth: '120px',
   },
   activeTab: {
     background: '#3b82f6',
@@ -636,9 +742,12 @@ const styles: Record<string, React.CSSProperties> = {
   },
   statsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
     gap: '20px',
     marginBottom: '30px',
+    width: '100%',
+    maxWidth: '100%',
+    boxSizing: 'border-box',
   },
   statCard: {
     padding: '24px',
@@ -669,8 +778,11 @@ const styles: Record<string, React.CSSProperties> = {
   },
   chartsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
     gap: '20px',
+    width: '100%',
+    maxWidth: '100%',
+    boxSizing: 'border-box',
   },
   donutWrapper: {
     position: 'relative',
@@ -705,6 +817,8 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '16px',
     boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
     backdropFilter: 'blur(10px)',
+    width: '100%',
+    boxSizing: 'border-box',
   },
   chartTitle: {
     margin: '0 0 20px 0',
@@ -781,6 +895,8 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '16px',
     boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
     backdropFilter: 'blur(10px)',
+    width: '100%',
+    boxSizing: 'border-box',
   },
   tableTitle: {
     margin: '0 0 20px 0',
@@ -881,7 +997,9 @@ const styles: Record<string, React.CSSProperties> = {
     boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
     backdropFilter: 'blur(10px)',
     maxWidth: '600px',
+    width: '100%',
     margin: '0 auto',
+    boxSizing: 'border-box',
   },
   formTitle: {
     margin: '0 0 24px 0',
