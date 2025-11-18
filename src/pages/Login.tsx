@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { db } from '../firebase'
 import { collection, getDocs, query, where, limit } from 'firebase/firestore'
+import { apiConfig } from '../api/config'
 
 export default function Login() {
   const [username, setUsername] = useState('')
@@ -20,18 +21,65 @@ export default function Login() {
     setIsError(false)
     setSubmitting(true)
     try {
-      // Authenticate against Firestore users collection
-      const usersRef = collection(db, 'users')
-      const q = query(usersRef, where('username', '==', username), where('password', '==', password), limit(1))
-      const snap = await getDocs(q)
-      if (snap.empty) {
+      let user: any = null
+
+      // Try API endpoint first if available
+      try {
+        const apiUrl = apiConfig.endpoints.login
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username, password }),
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          user = data.user || data
+          localStorage.setItem('token', data.token || 'api-token')
+        } else if (response.status !== 404) {
+          // If API exists but returns error, use that error
+          const errorData = await response.json().catch(() => ({ error: 'Login failed' }))
+          throw new Error(errorData.error || 'Login failed')
+        }
+        // If 404, API doesn't exist, fall through to Firestore
+      } catch (apiError: any) {
+        // If API call fails with network error or 404, try Firestore
+        if (apiError.message && !apiError.message.includes('fetch')) {
+          throw apiError
+        }
+        // Continue to Firestore fallback
+      }
+
+      // Fallback to Firestore if API didn't work
+      if (!user) {
+        try {
+          const usersRef = collection(db, 'users')
+          const q = query(usersRef, where('username', '==', username), where('password', '==', password), limit(1))
+          const snap = await getDocs(q)
+          if (snap.empty) {
+            throw new Error('Invalid credentials')
+          }
+          const doc = snap.docs[0]
+          user = { id: doc.id, ...(doc.data() as any) }
+          localStorage.setItem('token', 'firestore-local')
+        } catch (firestoreError: any) {
+          // Check if it's a permission error
+          if (firestoreError.code === 'permission-denied' || 
+              firestoreError.message?.includes('permission') || 
+              firestoreError.message?.includes('insufficient')) {
+            throw new Error('Database access denied. Please contact your administrator to update Firestore security rules to allow reading the users collection.')
+          }
+          throw firestoreError
+        }
+      }
+
+      if (!user) {
         throw new Error('Invalid credentials')
       }
-      const doc = snap.docs[0]
-      const user = { id: doc.id, ...(doc.data() as any) }
 
       setMessage(`Welcome ${user.name || username}`)
-      localStorage.setItem('token', 'firestore-local')
       localStorage.setItem('user', JSON.stringify(user))
 
       const role = user?.role
@@ -42,7 +90,12 @@ export default function Login() {
       }
     } catch (err: any) {
       setIsError(true)
-      setMessage(err.message)
+      // Provide user-friendly error messages
+      if (err.message?.includes('permission') || err.message?.includes('insufficient')) {
+        setMessage('Access denied. Please contact your administrator.')
+      } else {
+        setMessage(err.message || 'An error occurred during login')
+      }
     } finally {
       setSubmitting(false)
     }
